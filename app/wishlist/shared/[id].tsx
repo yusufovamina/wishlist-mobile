@@ -1,20 +1,8 @@
 import { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  Button,
-  ActivityIndicator,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  Dimensions,
-  Share,
-} from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import api from "../services/api";
-
-const screenWidth = Dimensions.get("window").width;
+import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet, Image } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import api from "../../../services/api";
+import AsyncStorage from "@react-native-async-storage/async-storage"; 
 
 interface Gift {
   id: string;
@@ -22,23 +10,40 @@ interface Gift {
   price: number;
   imageUrl: string;
   category: string;
-  wishlistId: string;
+  reserved: boolean;
 }
 
-export default function WishlistScreen() {
-  const [gifts, setGifts] = useState<Gift[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const router = useRouter();
+export default function SharedWishlistScreen() {
   const { id: wishlistId } = useLocalSearchParams();
+  const [gifts, setGifts] = useState<Gift[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [isOwner, setIsOwner] = useState<boolean>(false);
+  const router = useRouter();
 
   useEffect(() => {
+    checkIfOwner();
     fetchGifts();
   }, []);
+
+  const checkIfOwner = async () => {
+    try {
+      const userId = await AsyncStorage.getItem("userId"); // Получаем ID пользователя из локального хранилища
+      const response = await api.get(`/Wishlist/${wishlistId}/owner`); // Получаем владельца вишлиста
+      const ownerId = response.data.ownerId; 
+
+      if (userId === ownerId) {
+        setIsOwner(true);
+        router.replace("/wishlist"); // 🔥 Если это его вишлист, отправляем его в обычный экран
+      }
+    } catch (error) {
+      console.error("Error checking wishlist owner:", error);
+    }
+  };
 
   const fetchGifts = async () => {
     setLoading(true);
     try {
-      const response = await api.get<Gift[]>("/Gift/wishlist");
+      const response = await api.get<Gift[]>(`/Gift/wishlist/${wishlistId}`);
       setGifts(response.data);
     } catch (error) {
       console.warn("Error fetching gifts:", error);
@@ -47,31 +52,28 @@ export default function WishlistScreen() {
     }
   };
 
-  const handleShareWishlist = async () => {
-    if (!wishlistId) return;
-
-    const deepLink = `yourwishlist://wishlist/${wishlistId}`;
-    const webLink = `https://yourwishlist.vercel.app/wishlist/shared/${wishlistId}`;
-
+  const handleReserveGift = async (giftId: string) => {
     try {
-      await Share.share({
-        title: "Check out my Wishlist!",
-        message: `Here's my wishlist:\n📱 Mobile: ${deepLink}\n🌍 Web: ${webLink}`,
-      });
-      console.log("ok"
-      )
+      await api.post(`/Gift/${giftId}/reserve`);
+      setGifts((prevGifts) =>
+        prevGifts.map((gift) =>
+          gift.id === giftId ? { ...gift, reserved: true } : gift
+        )
+      );
+      alert("Gift reserved!");
     } catch (error) {
-      console.error("Error sharing:", error);
+      console.error("Error reserving gift:", error);
+      alert("Failed to reserve gift.");
     }
   };
 
+  if (isOwner) {
+    return null; // Экран Shared Wishlist не загружается, если это владелец
+  }
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🎁 My Wishlist</Text>
-
-      <TouchableOpacity style={styles.refreshButton} onPress={fetchGifts} disabled={loading}>
-        <Text style={styles.buttonText}>🔄 Refresh List</Text>
-      </TouchableOpacity>
+      <Text style={styles.title}>🎁 Friend's Wishlist</Text>
 
       {loading ? (
         <ActivityIndicator size="large" color="#6a0dad" />
@@ -82,10 +84,7 @@ export default function WishlistScreen() {
           data={gifts}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.giftItem}
-              onPress={() => router.push({ pathname: "/gift/[id]", params: { id: item.id } })}
-            >
+            <View style={styles.giftItem}>
               {item.imageUrl ? (
                 <Image source={{ uri: item.imageUrl }} style={styles.giftImage} resizeMode="cover" />
               ) : (
@@ -93,24 +92,23 @@ export default function WishlistScreen() {
                   <Text style={styles.placeholderText}>No Image</Text>
                 </View>
               )}
-
               <View style={styles.giftTextContainer}>
                 <Text style={styles.giftText}>{item.name}</Text>
                 <Text style={styles.priceText}>${item.price}</Text>
                 <Text style={styles.categoryText}>{item.category}</Text>
               </View>
-            </TouchableOpacity>
+
+              {!item.reserved ? (
+                <TouchableOpacity style={styles.reserveButton} onPress={() => handleReserveGift(item.id)}>
+                  <Text style={styles.buttonText}>Reserve</Text>
+                </TouchableOpacity>
+              ) : (
+                <Text style={styles.reservedText}>Reserved</Text>
+              )}
+            </View>
           )}
         />
       )}
-
-      <TouchableOpacity style={styles.createButton} onPress={() => router.push("/create-gift")}>
-        <Text style={styles.buttonText}>+ Create Gift</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.shareButton} onPress={handleShareWishlist}>
-        <Text style={styles.buttonText}>🔗 Share Wishlist</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -133,14 +131,6 @@ const styles = StyleSheet.create({
     color: "#999",
     marginTop: 20,
   },
-  shareButton: {
-    backgroundColor: "#4a228a",
-    padding: 15,
-    borderRadius: 10,
-    marginTop: 15,
-    width: "90%",
-    alignItems: "center",
-  },
   giftItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -148,7 +138,7 @@ const styles = StyleSheet.create({
     marginVertical: 6,
     borderRadius: 15,
     backgroundColor: "#f4f4f4",
-    width: screenWidth * 0.9,
+    width: "90%",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
@@ -156,15 +146,15 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   giftImage: {
-    width: 130,
-    height: 130,
-    borderRadius: 12,
+    width: 100,
+    height: 100,
+    borderRadius: 10,
     marginRight: 15,
   },
   imagePlaceholder: {
-    width: 130,
-    height: 130,
-    borderRadius: 12,
+    width: 100,
+    height: 100,
+    borderRadius: 10,
     backgroundColor: "#ddd",
     justifyContent: "center",
     alignItems: "center",
@@ -178,12 +168,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   giftText: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#333",
   },
   priceText: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "bold",
     color: "#6a0dad",
     marginTop: 5,
@@ -193,25 +183,21 @@ const styles = StyleSheet.create({
     color: "#666",
     marginTop: 5,
   },
-  refreshButton: {
-    backgroundColor: "#6a0dad",
-    padding: 12,
-    borderRadius: 10,
+  reserveButton: {
+    backgroundColor: "#4CAF50",
+    padding: 10,
+    borderRadius: 8,
     alignItems: "center",
-    width: "95%",
-    marginBottom: 10,
+    width: 90,
   },
-  createButton: {
-    backgroundColor: "#6a0dad",
-    padding: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 10,
-    width: "95%",
+  reservedText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#FF5733",
   },
   buttonText: {
     color: "white",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
   },
 });
