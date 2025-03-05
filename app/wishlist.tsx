@@ -3,7 +3,6 @@ import {
   View,
   Text,
   FlatList,
-  Button,
   ActivityIndicator,
   StyleSheet,
   TouchableOpacity,
@@ -22,7 +21,6 @@ interface Gift {
   price: number;
   imageUrl: string;
   category: string;
-  wishlistId: string;
 }
 
 export default function WishlistScreen() {
@@ -36,9 +34,15 @@ export default function WishlistScreen() {
   }, []);
 
   const fetchGifts = async () => {
+    if (!wishlistId) {
+      console.warn("No wishlistId found");
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await api.get<Gift[]>("/Gift/wishlist");
+      const response = await api.get<Gift[]>(`/Gift/wishlist/${wishlistId}`);
+      console.log("Fetched gifts:", response.data); // Логируем полученные данные
       setGifts(response.data);
     } catch (error) {
       console.warn("Error fetching gifts:", error);
@@ -58,8 +62,6 @@ export default function WishlistScreen() {
         title: "Check out my Wishlist!",
         message: `Here's my wishlist:\n📱 Mobile: ${deepLink}\n🌍 Web: ${webLink}`,
       });
-      console.log("ok"
-      )
     } catch (error) {
       console.error("Error sharing:", error);
     }
@@ -75,24 +77,21 @@ export default function WishlistScreen() {
 
       {loading ? (
         <ActivityIndicator size="large" color="#6a0dad" />
-      ) : gifts.length === 0 ? (
-        <Text style={styles.emptyText}>No gifts yet.</Text>
       ) : (
         <FlatList
           data={gifts}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => String(item.id)}
+          ListEmptyComponent={<Text style={styles.emptyText}>No gifts yet.</Text>}
           renderItem={({ item }) => (
             <TouchableOpacity
               style={styles.giftItem}
               onPress={() => router.push({ pathname: "/gift/[id]", params: { id: item.id } })}
             >
-              {item.imageUrl ? (
-                <Image source={{ uri: item.imageUrl }} style={styles.giftImage} resizeMode="cover" />
-              ) : (
-                <View style={styles.imagePlaceholder}>
-                  <Text style={styles.placeholderText}>No Image</Text>
-                </View>
-              )}
+              <Image
+                source={{ uri: item.imageUrl || "https://via.placeholder.com/150" }}
+                style={styles.giftImage}
+                resizeMode="cover"
+              />
 
               <View style={styles.giftTextContainer}>
                 <Text style={styles.giftText}>{item.name}</Text>
@@ -160,19 +159,6 @@ const styles = StyleSheet.create({
     height: 130,
     borderRadius: 12,
     marginRight: 15,
-  },
-  imagePlaceholder: {
-    width: 130,
-    height: 130,
-    borderRadius: 12,
-    backgroundColor: "#ddd",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 15,
-  },
-  placeholderText: {
-    color: "#777",
-    fontSize: 14,
   },
   giftTextContainer: {
     flex: 1,
