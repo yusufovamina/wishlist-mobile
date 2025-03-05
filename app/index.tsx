@@ -1,6 +1,8 @@
 import { View, Text, Button, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import api from '../services/api'
+import FeatureCarousel from './FeatureCarousel';
+
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -8,8 +10,8 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome to Wishlist App!</Text>
-      <Button title="Go to Wishlist" onPress={() => router.push('/wishlist')} />
-      <Button title="Login" onPress={() => router.push('/login')} />
+      <FeatureCarousel/>
+      <Button title="Create your Wishlist" onPress={() => router.push('/login')} />
     </View>
   );
 }
