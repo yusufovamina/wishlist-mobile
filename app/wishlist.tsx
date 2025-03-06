@@ -10,7 +10,8 @@ import {
   Dimensions,
   Share,
 } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../services/api";
 
 const screenWidth = Dimensions.get("window").width;
@@ -26,36 +27,64 @@ interface Gift {
 export default function WishlistScreen() {
   const [gifts, setGifts] = useState<Gift[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const router = useRouter();
-  const { id: wishlistId } = useLocalSearchParams();
 
   useEffect(() => {
-    fetchGifts();
+    loadUserId();
   }, []);
 
+  useEffect(() => {
+    if (userId) {
+      fetchGifts();
+    }
+  }, [userId]);
+
+  // Загружаем ID пользователя из AsyncStorage
+  const loadUserId = async () => {
+    try {
+      const storedUserId = await AsyncStorage.getItem("userId");
+      if (storedUserId) {
+        setUserId(storedUserId);
+        console.log("✅ Загруженный userId:", storedUserId);
+      } else {
+        console.warn("⚠️ userId отсутствует в AsyncStorage");
+      }
+    } catch (error) {
+      console.error("❌ Ошибка загрузки userId:", error);
+    }
+  };
+
+  // Запрос к API для получения подарков
   const fetchGifts = async () => {
-    if (!wishlistId) {
-      console.warn("No wishlistId found");
+    if (!userId) {
+      console.warn("❌ Ошибка: userId отсутствует.");
       return;
     }
 
     setLoading(true);
     try {
-      const response = await api.get<Gift[]>(`/Gift/wishlist/${wishlistId}`);
-      console.log("Fetched gifts:", response.data); // Логируем полученные данные
+      const response = await api.get<Gift[]>(`/Gift/wishlist`);
+      console.log("📦 Полученные подарки:", response.data);
+
+      if (response.data.length === 0) {
+        console.warn("⚠️ У пользователя пока нет подарков.");
+      }
+
       setGifts(response.data);
     } catch (error) {
-      console.warn("Error fetching gifts:", error);
+      console.error("❌ Ошибка при загрузке подарков:", error);
     } finally {
       setLoading(false);
     }
   };
 
+  // Функция для шаринга списка желаний
   const handleShareWishlist = async () => {
-    if (!wishlistId) return;
+    if (!userId) return;
 
-    const deepLink = `yourwishlist://wishlist/${wishlistId}`;
-    const webLink = `https://yourwishlist.vercel.app/wishlist/shared/${wishlistId}`;
+    const deepLink = `yourwishlist://wishlist/${userId}`;
+    const webLink = `https://yourwishlist.vercel.app/wishlist/shared/${userId}`;
 
     try {
       await Share.share({
@@ -63,7 +92,7 @@ export default function WishlistScreen() {
         message: `Here's my wishlist:\n📱 Mobile: ${deepLink}\n🌍 Web: ${webLink}`,
       });
     } catch (error) {
-      console.error("Error sharing:", error);
+      console.error("❌ Ошибка при шаринге:", error);
     }
   };
 
