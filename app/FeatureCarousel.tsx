@@ -41,7 +41,7 @@ export default function FeatureCarousel() {
       <Carousel
         loop
         width={width * 0.9} 
-        height={280}  
+        height={320}  
         autoPlay
         autoPlayInterval={3000}
         data={features}
@@ -54,10 +54,7 @@ export default function FeatureCarousel() {
         {features.map((_, index) => (
           <View 
             key={index} 
-            style={[
-              styles.dot, 
-              activeIndex === index && styles.activeDot
-            ]} 
+            style={[styles.dot, activeIndex === index && styles.activeDot]} 
           />
         ))}
       </View>
@@ -76,44 +73,46 @@ const styles = StyleSheet.create({
   },
   slide: {
     backgroundColor: "rgba(255, 255, 255, 0.15)", // Frosted glass effect
-    borderRadius: 15,
+    borderRadius: 20, // Increased radius for more modern look
     padding: 20,
     alignItems: "center",
     justifyContent: "center",
     width: width * 0.9,
-    height: 250,
+    height: 320, // Increased height for a larger card
     elevation: 10, 
     shadowColor: "#000", 
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    backdropFilter: "blur(15px)", // Blur effect (Web)
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0,
+    shadowRadius: 0,
+    backdropFilter: "blur(15px)", 
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)", // Subtle border for glass effect
+    borderColor: "rgba(255, 255, 255, 0.3)", // Subtle border for glass effect
+    overflow: "hidden", // To ensure rounded corners work as expected
   },
   image: {
-    width: 180,  
-    height: 180, 
-    resizeMode: "contain",
-    marginBottom: 10,
+    width: 220,  // Fixed width for all images
+    height: 220,  // Fixed height for all images
+    resizeMode: "cover", // Ensures images cover the container while maintaining aspect ratio
+    marginBottom: 15,
+    borderRadius: 15, // Rounded corners for the image
   },
   text: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
     textAlign: "center",
     color: "white",
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowColor: "rgba(0, 0, 0, 0.4)", // Subtle text shadow for readability
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 5,
   },
   pagination: {
     flexDirection: "row",
-    marginTop: 15,
+    marginTop: 20,
   },
   dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
     backgroundColor: "rgba(255, 255, 255, 0.5)",
     marginHorizontal: 5,
   },

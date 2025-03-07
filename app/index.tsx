@@ -9,10 +9,10 @@ export default function HomeScreen() {
   return (
     <ImageBackground source={require("./assets/background.jpg")} style={styles.background} >
       <SafeAreaView style={styles.container}>
-        <View style={styles.glassContainer}>
+       
           <Text style={styles.title}>Welcome to Wishlist App!</Text>
           <FeatureCarousel />
-        </View>
+      
       </SafeAreaView>
     </ImageBackground>
   );
