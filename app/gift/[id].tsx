@@ -8,16 +8,17 @@ import {
   ActivityIndicator,
   StyleSheet,
   Alert,
+  ImageBackground,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../../services/api";
+import { BlurView } from "expo-blur"; // Import from expo-blur instead
 
 export default function GiftDetailsScreen() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
 
-  // Приводим `id` к строке (если массив, берём первый элемент)
   const giftId = Array.isArray(id) ? id[0] : id;
 
   const [gift, setGift] = useState<any>(null);
@@ -50,10 +51,6 @@ export default function GiftDetailsScreen() {
         return;
       }
 
-      console.log("Token found:", token);
-      console.log("Deleting gift with ID:", giftId);
-
-      // Отправляем DELETE-запрос
       const response = await api.delete(`/Gift/${giftId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -61,11 +58,9 @@ export default function GiftDetailsScreen() {
         },
       });
 
-      console.log("Delete response:", response.status);
-
       if (response.status === 200 || response.status === 204) {
         Alert.alert("Success", "Gift deleted successfully!");
-        router.replace("/wishlist"); // Возвращаемся к списку
+        router.replace("/wishlist");
       } else {
         Alert.alert("Error", `Failed to delete gift. Status: ${response.status}`);
       }
@@ -80,51 +75,115 @@ export default function GiftDetailsScreen() {
       { text: "Cancel", style: "cancel" },
       {
         text: "Delete",
-        onPress: () => deleteGift(), // 🔥 Вызываем `deleteGift` без async/await внутри Alert
+        onPress: () => deleteGift(),
       },
     ]);
   };
 
   return (
-    <View style={styles.container}>
-      {loading ? (
-        <ActivityIndicator size="large" color="#6a0dad" />
-      ) : gift ? (
-        <>
-          <Image source={{ uri: gift.imageUrl }} style={styles.image} resizeMode="cover" />
-          <Text style={styles.title}>{gift.name}</Text>
-          <Text style={styles.price}>${gift.price}</Text>
-          <Text style={styles.category}>Category: {gift.category}</Text>
+    <ImageBackground
+      source={require("../assets/background.jpg")} // Your background image
+      style={styles.container}
+    >
+        {loading ? (
+          <ActivityIndicator size="large" color="#6a0dad" />
+        ) : gift ? (
+          <>
+            <Image
+              source={{ uri: gift.imageUrl }}
+              style={styles.image}
+              resizeMode="cover"
+            />
+            <Text style={styles.title}>{gift.name}</Text>
+            <Text style={styles.price}>${gift.price}</Text>
+            <Text style={styles.category}>Category: {gift.category}</Text>
 
-          {/* Кнопки */}
-          <TouchableOpacity
-            style={[styles.button, styles.editButton]}
-            onPress={() =>
-              router.push({ pathname: "/gift/edit/[id]", params: { id: giftId } })
-            }
-          >
-            <Text style={styles.buttonText}>✏️ Edit Gift</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+  style={[styles.button, styles.editButton]}
+  onPress={() =>
+    router.push({ pathname: "/gift/edit/[id]", params: { id: giftId } })
+  }
+>
+  <Text style={styles.buttonText}>✏️ Edit Gift</Text>
+</TouchableOpacity>
 
-          {/* Удаление */}
-          <Button title="🗑️ Delete Gift" color="red" onPress={handleDeleteGift} />
-        </>
-      ) : (
-        <Text style={styles.errorText}>Gift not found.</Text>
-      )}
-    </View>
+<TouchableOpacity
+  style={[styles.button, styles.deleteButton]} // Use a different style for delete if needed
+  onPress={handleDeleteGift}
+>
+  <Text style={styles.buttonText}>🗑️ Delete Gift</Text>
+</TouchableOpacity>
+
+          </>
+        ) : (
+          <Text style={styles.errorText}>Gift not found.</Text>
+        )}
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: "center", padding: 20, backgroundColor: "#fff" },
-  image: { width: 200, height: 200, borderRadius: 10, marginBottom: 15 },
-  title: { fontSize: 28, fontWeight: "bold", color: "#333", textAlign: "center" },
-  price: { fontSize: 24, fontWeight: "bold", color: "#6a0dad", marginTop: 5 },
-  category: { fontSize: 18, color: "#666", marginTop: 5 },
-  button: { padding: 15, borderRadius: 10, marginTop: 15, width: "90%", alignItems: "center" },
-  editButton: { backgroundColor: "#FFD700" },
-  deleteButton: { backgroundColor: "#FF4D4D" },
-  buttonText: { color: "white", fontSize: 18, fontWeight: "bold" },
-  errorText: { fontSize: 18, color: "#999", marginTop: 20 },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  editButton: {
+    backgroundColor: "#FFD700", // Yellow for Edit
+  },
+  deleteButton: {
+    backgroundColor: "#FF6347", // Red for Delete
+  },
+  glassContainer: {
+    flex: 1,
+    alignItems: "center",
+    padding: 20,
+    width: "100%",
+    backgroundColor: "rgba(255, 255, 255, 0.7)", // Semi-transparent white
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#fff",
+    overflow: "hidden",
+  },
+  image: {
+    width: 200,
+    height: 200,
+    borderRadius: 10,
+    marginBottom: 15,
+  },
+  title: {
+    fontSize: 34,
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
+  },
+  price: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#6a0dad",
+    marginTop: 5,
+  },
+  category: {
+    fontSize: 18,
+    color: "#ffffff",
+    marginTop: 5,
+  },
+  button: {
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 15,
+    width: "90%",
+    alignItems: "center",
+  },
+ 
+  buttonText: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  errorText: {
+    fontSize: 18,
+    color: "#999",
+    marginTop: 20,
+  },
 });

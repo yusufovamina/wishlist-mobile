@@ -9,10 +9,12 @@ import {
   Image,
   Dimensions,
   Share,
+  ImageBackground,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../services/api";
+import { BlurView } from "expo-blur";  // You'll need to install expo-blur package for blur effect
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -40,7 +42,6 @@ export default function WishlistScreen() {
     }
   }, [userId]);
 
-  // Загружаем ID пользователя из AsyncStorage
   const loadUserId = async () => {
     try {
       const storedUserId = await AsyncStorage.getItem("userId");
@@ -55,7 +56,6 @@ export default function WishlistScreen() {
     }
   };
 
-  // Запрос к API для получения подарков
   const fetchGifts = async () => {
     if (!userId) {
       console.warn("❌ Ошибка: userId отсутствует.");
@@ -79,7 +79,6 @@ export default function WishlistScreen() {
     }
   };
 
-  // Функция для шаринга списка желаний
   const handleShareWishlist = async () => {
     if (!userId) return;
 
@@ -97,58 +96,70 @@ export default function WishlistScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>🎁 My Wishlist</Text>
+    <ImageBackground
+      source={require("../assets/background.jpg")}
+      style={styles.background}
+    >
+      <BlurView intensity={100} style={styles.container}>
+        <Text style={styles.title}>🎁 My Wishlist</Text>
 
-      <TouchableOpacity style={styles.refreshButton} onPress={fetchGifts} disabled={loading}>
-        <Text style={styles.buttonText}>🔄 Refresh List</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.refreshButton} onPress={fetchGifts} disabled={loading}>
+          <Text style={styles.buttonText}>🔄 Refresh List</Text>
+        </TouchableOpacity>
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#6a0dad" />
-      ) : (
-        <FlatList
-          data={gifts}
-          keyExtractor={(item) => String(item.id)}
-          ListEmptyComponent={<Text style={styles.emptyText}>No gifts yet.</Text>}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.giftItem}
-              onPress={() => router.push({ pathname: "/gift/[id]", params: { id: item.id } })}
-            >
-              <Image
-                source={{ uri: item.imageUrl || "https://via.placeholder.com/150" }}
-                style={styles.giftImage}
-                resizeMode="cover"
-              />
+        {loading ? (
+          <ActivityIndicator size="large" color="#6a0dad" />
+        ) : (
+          <FlatList
+            data={gifts}
+            keyExtractor={(item) => String(item.id)}
+            ListEmptyComponent={<Text style={styles.emptyText}>No gifts yet.</Text>}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.giftItem}
+                onPress={() => router.push({ pathname: "/gift/[id]", params: { id: item.id } })}
+              >
+                <Image
+                  source={{ uri: item.imageUrl || "https://via.placeholder.com/150" }}
+                  style={styles.giftImage}
+                  resizeMode="cover"
+                />
 
-              <View style={styles.giftTextContainer}>
-                <Text style={styles.giftText}>{item.name}</Text>
-                <Text style={styles.priceText}>${item.price}</Text>
-                <Text style={styles.categoryText}>{item.category}</Text>
-              </View>
-            </TouchableOpacity>
-          )}
-        />
-      )}
+                <View style={styles.giftTextContainer}>
+                  <Text style={styles.giftText}>{item.name}</Text>
+                  <Text style={styles.priceText}>${item.price}</Text>
+                  <Text style={styles.categoryText}>{item.category}</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+          />
+        )}
 
-      <TouchableOpacity style={styles.createButton} onPress={() => router.push("/create-gift")}>
-        <Text style={styles.buttonText}>+ Create Gift</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.createButton} onPress={() => router.push("/create-gift")}>
+          <Text style={styles.buttonText}>+ Create Gift</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.shareButton} onPress={handleShareWishlist}>
-        <Text style={styles.buttonText}>🔗 Share Wishlist</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity style={styles.shareButton} onPress={handleShareWishlist}>
+          <Text style={styles.buttonText}>🔗 Share Wishlist</Text>
+        </TouchableOpacity>
+      </BlurView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
+  },
   container: {
     flex: 1,
     padding: 10,
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(255, 255, 255, 0.6)", // Transparent background for frosted effect
+    borderRadius: 20,
   },
   title: {
     fontSize: 26,
@@ -175,7 +186,7 @@ const styles = StyleSheet.create({
     padding: 15,
     marginVertical: 6,
     borderRadius: 15,
-    backgroundColor: "#f4f4f4",
+    backgroundColor: "#ffffffbb", // Slight transparent background for glass effect
     width: screenWidth * 0.9,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },

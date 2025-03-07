@@ -7,6 +7,7 @@ import {
   Alert,
   ActivityIndicator,
   StyleSheet,
+  ImageBackground,
   Image,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
@@ -103,58 +104,70 @@ const GiftForm: React.FC<GiftFormProps> = ({ onGiftAdded = () => {} }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>🎁 Add a Gift</Text>
+    <ImageBackground
+      source={require("./assets/background.jpg")} // Ваш фоновый изображение
+      style={styles.background}
+    >
+      <View style={styles.container}>
+        <Text style={styles.title}>🎁 Add a Gift</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Gift Name"
-        value={name}
-        onChangeText={setName}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Gift Name"
+          value={name}
+          onChangeText={setName}
+        />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Price ($)"
-        keyboardType="numeric"
-        value={price}
-        onChangeText={setPrice}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Price ($)"
+          keyboardType="numeric"
+          value={price}
+          onChangeText={setPrice}
+        />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Category"
-        value={category}
-        onChangeText={setCategory}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Category"
+          value={category}
+          onChangeText={setCategory}
+        />
 
-      {/* Кнопка выбора изображения */}
-      <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-        <Text style={styles.imagePickerText}>{image ? "Change Image" : "Pick an Image"}</Text>
-      </TouchableOpacity>
+        {/* Кнопка выбора изображения */}
+        <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+          <Text style={styles.imagePickerText}>{image ? "Change Image" : "Pick an Image"}</Text>
+        </TouchableOpacity>
 
-      {/* Показываем выбранное изображение */}
-      {image && <Image source={{ uri: image }} style={styles.imagePreview} />}
+        {/* Показываем выбранное изображение */}
+        {image && <Image source={{ uri: image }} style={styles.imagePreview} />}
 
-      {/* Кнопка для создания подарка */}
-      <TouchableOpacity style={styles.createButton} onPress={handleCreateGift} disabled={isLoading}>
-        {isLoading ? (
-          <ActivityIndicator size="small" color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Add Gift</Text>
-        )}
-      </TouchableOpacity>
-    </View>
+        {/* Кнопка для создания подарка */}
+        <TouchableOpacity style={styles.createButton} onPress={handleCreateGift} disabled={isLoading}>
+          {isLoading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Add Gift</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  background: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
     padding: 20,
+  },
+  container: {
+    width: "100%", // Занимает всю ширину
+    maxWidth: 600, // Максимальная ширина (для удобства на больших экранах)
+    padding: 20,
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.6)", // Полупрозрачный фон для эффекта стеклянного морфизма
+    borderRadius: 15, // Скругленные углы
   },
   title: {
     fontSize: 24,
@@ -169,6 +182,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.7)", // Полупрозрачный фон
   },
   imagePicker: {
     backgroundColor: "#ddd",

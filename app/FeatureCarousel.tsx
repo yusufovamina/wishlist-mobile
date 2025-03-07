@@ -46,7 +46,7 @@ export default function FeatureCarousel() {
         autoPlayInterval={3000}
         data={features}
         scrollAnimationDuration={1200}
-        onSnapToItem={(index) => setActiveIndex(index)}
+        onSnapToItem={(index: React.SetStateAction<number>) => setActiveIndex(index)}
         renderItem={renderItem}
       />
 
@@ -75,18 +75,21 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   slide: {
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(255, 255, 255, 0.15)", // Frosted glass effect
     borderRadius: 15,
     padding: 20,
     alignItems: "center",
     justifyContent: "center",
     width: width * 0.9,
     height: 250,
-    elevation: 10, // Тень на Android
-    shadowColor: "#000", // Тень на iOS
+    elevation: 10, 
+    shadowColor: "#000", 
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
+    backdropFilter: "blur(15px)", // Blur effect (Web)
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)", // Subtle border for glass effect
   },
   image: {
     width: 180,  
@@ -98,7 +101,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     textAlign: "center",
-    color: "#6a0dad",
+    color: "white",
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 5,
   },
   pagination: {
     flexDirection: "row",
@@ -108,31 +114,34 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#c4c4c4",
+    backgroundColor: "rgba(255, 255, 255, 0.5)",
     marginHorizontal: 5,
-    opacity: 0.6,
   },
   activeDot: {
-    backgroundColor: "#6a0dad",
+    backgroundColor: "white",
     width: 12,
     height: 12,
-    opacity: 1,
   },
   button: {
     marginTop: 25,
-    backgroundColor: "#6a0dad",
+    backgroundColor: "rgba(255, 255, 255, 0.2)", // Transparent button
     paddingVertical: 14,
     paddingHorizontal: 35,
     borderRadius: 10,
-    elevation: 5, // Тень на Android
-    shadowColor: "#6a0dad", // Тень на iOS
-    shadowOffset: { width: 0, height: 4 },
+    borderWidth: 1.5,
+    borderColor: "rgba(255, 255, 255, 0.4)", // Glass border effect
+    backdropFilter: "blur(10px)",
+    shadowColor: "rgba(255, 255, 255, 0.5)", 
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
-    shadowRadius: 6,
+    shadowRadius: 5,
   },
   buttonText: {
-    color: "#fff",
+    color: "white",
     fontSize: 18,
     fontWeight: "bold",
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
 });

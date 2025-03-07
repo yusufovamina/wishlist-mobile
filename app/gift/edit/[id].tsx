@@ -8,10 +8,12 @@ import {
   StyleSheet,
   Image,
   Alert,
+  ImageBackground,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import api from "../../../services/api";
+import { BlurView } from "expo-blur"; // Import BlurView for glassmorphism effect
 
 export default function EditGiftScreen() {
   const { id } = useLocalSearchParams(); // 🔥 Получаем ID из URL
@@ -21,6 +23,7 @@ export default function EditGiftScreen() {
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
+  const giftId = Array.isArray(id) ? id[0] : id;
 
   useEffect(() => {
     fetchGiftDetails();
@@ -80,10 +83,10 @@ export default function EditGiftScreen() {
         formData.append("imageFile", blob, `photo_${Date.now()}.jpg`);
       }
 
-      await api.put(`/Gift/${id}`, formData); // 🔥 Отправляем обновленные данные
+      await api.put(`/Gift/${giftId}`, formData); // 🔥 Отправляем обновленные данные
 
       Alert.alert("Success", "Gift updated successfully!");
-      router.replace({ pathname: "/gift/[id]", params: { id } });
+      router.replace({ pathname: "/gift/[id]", params: { id: giftId } });
       // 🔥 Возвращаемся назад
     } catch (error) {
       console.error("Error updating gift:", error);
@@ -93,56 +96,83 @@ export default function EditGiftScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      {loading ? (
-        <ActivityIndicator size="large" color="#6a0dad" />
-      ) : (
-        <>
-          <Text style={styles.title}>Edit Gift</Text>
+    <View>
+      <ImageBackground
+        source={require("../../assets/background.jpg")} 
+        style={styles.background}
+      >
+        {loading ? (
+          <ActivityIndicator size="large" color="#6a0dad" />
+        ) : (
+          <BlurView intensity={80} style={styles.glassContainer}>
+            <Text style={styles.title}>Edit Gift</Text>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Gift Name"
-            value={name}
-            onChangeText={setName}
-          />
+            <TextInput
+              style={styles.input}
+              placeholder="Gift Name"
+              value={name}
+              onChangeText={setName}
+            />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Price"
-            keyboardType="numeric"
-            value={price}
-            onChangeText={setPrice}
-          />
+            <TextInput
+              style={styles.input}
+              placeholder="Price"
+              keyboardType="numeric"
+              value={price}
+              onChangeText={setPrice}
+            />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Category"
-            value={category}
-            onChangeText={setCategory}
-          />
+            <TextInput
+              style={styles.input}
+              placeholder="Category"
+              value={category}
+              onChangeText={setCategory}
+            />
 
-          {/* Выбор изображения */}
-          <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-            <Text style={styles.imagePickerText}>{image ? "Change Image" : "Pick an Image"}</Text>
-          </TouchableOpacity>
+            <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+              <Text style={styles.imagePickerText}>
+                {image ? "Change Image" : "Pick an Image"}
+              </Text>
+            </TouchableOpacity>
 
-          {/* Предпросмотр изображения */}
-          {image && <Image source={{ uri: image }} style={styles.imagePreview} />}
+            {image && <Image source={{ uri: image }} style={styles.imagePreview} />}
 
-          {/* Кнопка обновления */}
-          <TouchableOpacity style={styles.updateButton} onPress={handleUpdateGift} disabled={loading}>
-            <Text style={styles.buttonText}>Save Changes</Text>
-          </TouchableOpacity>
-        </>
-      )}
+            <TouchableOpacity
+              style={styles.updateButton}
+              onPress={handleUpdateGift}
+              disabled={loading}
+            >
+              <Text style={styles.buttonText}>Save Changes</Text>
+            </TouchableOpacity>
+          </BlurView>
+        )}
+      </ImageBackground>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: "center", padding: 20, backgroundColor: "#fff" },
-  title: { fontSize: 26, fontWeight: "bold", marginBottom: 15, color: "#6a0dad" },
+
+  background: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  glassContainer: {
+    padding: 20,
+    
+    margin: 70,
+    width: "90%",
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: "bold",
+    marginBottom: 15,
+    color: "#6a0dad",
+  },
   input: {
     width: "100%",
     padding: 15,
