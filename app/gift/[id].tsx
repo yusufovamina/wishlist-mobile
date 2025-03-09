@@ -4,7 +4,6 @@ import {
   Text,
   Image,
   TouchableOpacity,
-  Button,
   ActivityIndicator,
   StyleSheet,
   Alert,
@@ -13,7 +12,8 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../../services/api";
-import { BlurView } from "expo-blur"; // Import from expo-blur instead
+import { BlurView } from "expo-blur";
+import Animated, { FadeIn } from "react-native-reanimated";
 
 export default function GiftDetailsScreen() {
   const { id } = useLocalSearchParams();
@@ -82,100 +82,104 @@ export default function GiftDetailsScreen() {
 
   return (
     <ImageBackground
-      source={require("../assets/background.jpg")} // Your background image
-      style={styles.container}
+      source={require("../assets/background.jpg")}
+      style={styles.background}
     >
-        {loading ? (
-          <ActivityIndicator size="large" color="#6a0dad" />
-        ) : gift ? (
-          <>
-            <Image
-              source={{ uri: gift.imageUrl }}
-              style={styles.image}
-              resizeMode="cover"
-            />
-            <Text style={styles.title}>{gift.name}</Text>
-            <Text style={styles.price}>${gift.price}</Text>
-            <Text style={styles.category}>Category: {gift.category}</Text>
+      {loading ? (
+        <ActivityIndicator size="large" color="#6a0dad" />
+      ) : gift ? (
+        <Animated.View entering={FadeIn.duration(800)} style={styles.content}>
+          <Image
+            source={{ uri: gift.imageUrl }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+          <Text style={styles.title}>{gift.name}</Text>
+          <Text style={styles.price}>${gift.price}</Text>
+          <Text style={styles.category}>Category: {gift.category}</Text>
 
-            <TouchableOpacity
-  style={[styles.button, styles.editButton]}
-  onPress={() =>
-    router.push({ pathname: "/gift/edit/[id]", params: { id: giftId } })
-  }
->
-  <Text style={styles.buttonText}>✏️ Edit Gift</Text>
-</TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.editButton]}
+            onPress={() =>
+              router.push({ pathname: "/gift/edit/[id]", params: { id: giftId } })
+            }
+          >
+            <Text style={styles.buttonText}>Edit Gift</Text>
+          </TouchableOpacity>
 
-<TouchableOpacity
-  style={[styles.button, styles.deleteButton]} // Use a different style for delete if needed
-  onPress={handleDeleteGift}
->
-  <Text style={styles.buttonText}>🗑️ Delete Gift</Text>
-</TouchableOpacity>
-
-          </>
-        ) : (
-          <Text style={styles.errorText}>Gift not found.</Text>
-        )}
+          <TouchableOpacity
+            style={[styles.button, styles.deleteButton]}
+            onPress={handleDeleteGift}
+          >
+            <Text style={styles.buttonText}>Delete Gift</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      ) : (
+        <Text style={styles.errorText}>Gift not found.</Text>
+      )}
     </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  background: {
     flex: 1,
+    resizeMode: "cover",
     justifyContent: "center",
     alignItems: "center",
   },
-  editButton: {
-    backgroundColor: "#FFD700", // Yellow for Edit
-  },
-  deleteButton: {
-    backgroundColor: "#FF6347", // Red for Delete
-  },
-  glassContainer: {
-    flex: 1,
+  content: {
     alignItems: "center",
     padding: 20,
-    width: "100%",
-    backgroundColor: "rgba(255, 255, 255, 0.7)", // Semi-transparent white
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#fff",
-    overflow: "hidden",
+    width: "90%",
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 10,
+    elevation: 8,
   },
   image: {
-    width: 200,
-    height: 200,
-    borderRadius: 10,
+    width: 220,
+    height: 220,
+    borderRadius: 15,
     marginBottom: 15,
   },
   title: {
-    fontSize: 34,
+    fontSize: 28,
     fontWeight: "bold",
-    color: "#333",
-    textAlign: "center",
+    color: "white",       // Белый цвет заголовка
+    textAlign: "center",  // Центрирование текста
+    marginBottom: 10,
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 1, height: 2 },
+    textShadowRadius: 3,
   },
   price: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#6a0dad",
+    fontSize: 22,
+    fontWeight: "600",
+    color: "white",
     marginTop: 5,
   },
   category: {
     fontSize: 18,
-    color: "#ffffff",
+    color: "white",
     marginTop: 5,
   },
   button: {
     padding: 15,
     borderRadius: 10,
     marginTop: 15,
-    width: "90%",
+    width: "85%",
     alignItems: "center",
   },
- 
+  editButton: {
+    backgroundColor: "#6a0dad",
+  },
+  deleteButton: {
+    backgroundColor: "#E63946",
+  },
   buttonText: {
     color: "white",
     fontSize: 18,

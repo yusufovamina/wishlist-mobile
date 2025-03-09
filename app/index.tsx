@@ -1,18 +1,62 @@
-import React from "react";
-import { View, Text, StyleSheet, SafeAreaView, ImageBackground } from "react-native";
+import React, { useEffect } from "react";
+import { View, StyleSheet, SafeAreaView, ImageBackground } from "react-native";
 import { useRouter } from "expo-router";
 import FeatureCarousel from "./FeatureCarousel";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+} from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function HomeScreen() {
   const router = useRouter();
 
+  // Анимированные значения для заголовка
+  const titleOpacity = useSharedValue(0);
+  const titleTranslateY = useSharedValue(-20);
+
+  // Анимированные значения для карусели
+  const carouselOpacity = useSharedValue(0);
+  const carouselTranslateY = useSharedValue(20);
+
+  useEffect(() => {
+    // Заголовок появляется плавно и сдвигается вниз
+    titleOpacity.value = withTiming(1, { duration: 800 });
+    titleTranslateY.value = withTiming(0, { duration: 800 });
+    // Карусель появляется с задержкой, плавно сдвигаясь вверх
+    carouselOpacity.value = withDelay(500, withTiming(1, { duration: 800 }));
+    carouselTranslateY.value = withDelay(500, withTiming(0, { duration: 800 }));
+  }, []);
+
+  const animatedTitleStyle = useAnimatedStyle(() => ({
+    opacity: titleOpacity.value,
+    transform: [{ translateY: titleTranslateY.value }],
+  }));
+
+  const animatedCarouselStyle = useAnimatedStyle(() => ({
+    opacity: carouselOpacity.value,
+    transform: [{ translateY: carouselTranslateY.value }],
+  }));
+
   return (
-    <ImageBackground source={require("./assets/background.jpg")} style={styles.background} >
+   
+       <ImageBackground source={require("../assets/background.jpg")} style={styles.background}>
+      {/* Градиентный оверлей для затемнения фона */}
+      <LinearGradient
+        colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.4)"]}
+        style={StyleSheet.absoluteFill}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
       <SafeAreaView style={styles.container}>
-       
-          <Text style={styles.title}>Welcome to Wishlist App!</Text>
+        <Animated.Text style={[styles.title, animatedTitleStyle]}>
+          Welcome to Wishlist App!
+        </Animated.Text>
+        <Animated.View style={animatedCarouselStyle}>
           <FeatureCarousel />
-      
+        </Animated.View>
       </SafeAreaView>
     </ImageBackground>
   );
@@ -20,8 +64,7 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   background: {
-    flex: 2,
-    resizeMode: "cover",
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -30,27 +73,16 @@ const styles = StyleSheet.create({
     width: "100%",
     justifyContent: "center",
     alignItems: "center",
-  },
-  glassContainer: {
-    width: "90%",
-    padding: 20,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.15)", // Semi-transparent white
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 10,
-    alignItems: "center",
-    justifyContent: "center",
+    paddingHorizontal: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
     color: "white",
     marginBottom: 20,
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 5,
+    textAlign: "center",
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 4,
   },
 });

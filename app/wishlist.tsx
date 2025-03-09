@@ -102,7 +102,7 @@ export default function WishlistScreen() {
       style={styles.background}
     >
       <Animated.View entering={FadeIn.duration(500)} style={{ flex: 1 }}>
-        <BlurView intensity={100} style={styles.container}>
+   
           <Animated.Text entering={FadeIn.delay(200).duration(500)} style={styles.title}>
             My Wishlist
           </Animated.Text>
@@ -150,7 +150,7 @@ export default function WishlistScreen() {
           <TouchableOpacity style={styles.shareButton} onPress={handleShareWishlist}>
             <Text style={styles.buttonText}>🔗 Share Wishlist</Text>
           </TouchableOpacity>
-        </BlurView>
+        
       </Animated.View>
     </ImageBackground>
   );
@@ -167,15 +167,18 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.6)",
+    backgroundColor: "rgba(255, 255, 255, 0)",
     borderRadius: 20,
   },
   title: {
     fontSize: 26,
     fontWeight: "bold",
     marginBottom: 15,
-    color: "#6a0dad",
+    marginTop: 15,
+    color: "white",         // Заголовок белого цвета
+    textAlign: "center",    // Выравнивание по центру
   },
+  
   emptyText: {
     fontSize: 18,
     color: "#999",
@@ -187,6 +190,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginTop: 15,
     width: "90%",
+    alignSelf:"center",
     alignItems: "center",
   },
   giftItem: {
@@ -233,6 +237,8 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     alignItems: "center",
+    alignSelf:"center",
+
     width: "95%",
     marginBottom: 10,
   },
@@ -241,6 +247,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
+    alignSelf:"center",
     marginTop: 10,
     width: "95%",
   },

@@ -13,10 +13,11 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import api from "../../../services/api";
-import { BlurView } from "expo-blur"; // Import BlurView for glassmorphism effect
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function EditGiftScreen() {
-  const { id } = useLocalSearchParams(); // 🔥 Получаем ID из URL
+  const { id } = useLocalSearchParams(); // Получаем ID из URL
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
@@ -25,9 +26,23 @@ export default function EditGiftScreen() {
   const router = useRouter();
   const giftId = Array.isArray(id) ? id[0] : id;
 
+  // Анимация контейнера формы
+  const containerOpacity = useSharedValue(0);
+  const containerTranslateY = useSharedValue(20);
+
   useEffect(() => {
     fetchGiftDetails();
+    // Анимируем появление формы: плавное увеличение прозрачности и сдвиг вверх
+    containerOpacity.value = withTiming(1, { duration: 800 });
+    containerTranslateY.value = withTiming(0, { duration: 800 });
   }, []);
+
+  const animatedContainerStyle = useAnimatedStyle(() => {
+    return {
+      opacity: containerOpacity.value,
+      transform: [{ translateY: containerTranslateY.value }],
+    };
+  });
 
   const fetchGiftDetails = async () => {
     try {
@@ -83,121 +98,137 @@ export default function EditGiftScreen() {
         formData.append("imageFile", blob, `photo_${Date.now()}.jpg`);
       }
 
-      await api.put(`/Gift/${giftId}`, formData); // 🔥 Отправляем обновленные данные
-
+      await api.put(`/Gift/${giftId}`, formData);
       Alert.alert("Success", "Gift updated successfully!");
       router.replace({ pathname: "/gift/[id]", params: { id: giftId } });
-      // 🔥 Возвращаемся назад
     } catch (error) {
       console.error("Error updating gift:", error);
+      Alert.alert("Error", "Failed to update gift. See console for details.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <View>
-      <ImageBackground
-        source={require("../../assets/background.jpg")} 
-        style={styles.background}
-      >
-        {loading ? (
-          <ActivityIndicator size="large" color="#6a0dad" />
-        ) : (
-          <BlurView intensity={80} style={styles.glassContainer}>
-            <Text style={styles.title}>Edit Gift</Text>
+        <ImageBackground source={require("../../assets/background.jpg")} style={styles.background}>
+    
+      {loading ? (
+        <ActivityIndicator size="large" color="#6a0dad" />
+      ) : (
+        <Animated.View style={[styles.formContainer, animatedContainerStyle]}>
+          <Text style={styles.title}>Edit Gift</Text>
 
-            <TextInput
-              style={styles.input}
-              placeholder="Gift Name"
-              value={name}
-              onChangeText={setName}
-            />
+          <TextInput
+            style={styles.input}
+            placeholder="Gift Name"
+            placeholderTextColor="#ccc"
+            value={name}
+            onChangeText={setName}
+          />
 
-            <TextInput
-              style={styles.input}
-              placeholder="Price"
-              keyboardType="numeric"
-              value={price}
-              onChangeText={setPrice}
-            />
+          <TextInput
+            style={styles.input}
+            placeholder="Price"
+            placeholderTextColor="#ccc"
+            keyboardType="numeric"
+            value={price}
+            onChangeText={setPrice}
+          />
 
-            <TextInput
-              style={styles.input}
-              placeholder="Category"
-              value={category}
-              onChangeText={setCategory}
-            />
+          <TextInput
+            style={styles.input}
+            placeholder="Category"
+            placeholderTextColor="#ccc"
+            value={category}
+            onChangeText={setCategory}
+          />
 
-            <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-              <Text style={styles.imagePickerText}>
-                {image ? "Change Image" : "Pick an Image"}
-              </Text>
-            </TouchableOpacity>
+          <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+            <Text style={styles.imagePickerText}>
+              {image ? "Change Image" : "Pick an Image"}
+            </Text>
+          </TouchableOpacity>
 
-            {image && <Image source={{ uri: image }} style={styles.imagePreview} />}
+          {image && <Image source={{ uri: image }} style={styles.imagePreview} />}
 
-            <TouchableOpacity
+          <TouchableOpacity onPress={handleUpdateGift} disabled={loading} style={styles.buttonContainer}>
+            <LinearGradient
+              colors={["#6a0dad", "#9B59B6"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
               style={styles.updateButton}
-              onPress={handleUpdateGift}
-              disabled={loading}
             >
               <Text style={styles.buttonText}>Save Changes</Text>
-            </TouchableOpacity>
-          </BlurView>
-        )}
-      </ImageBackground>
-    </View>
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
+      )}
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-
   background: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  glassContainer: {
+  formContainer: {
     padding: 20,
-    
     margin: 70,
     width: "90%",
-    backgroundColor: "rgba(255, 255, 255, 0.7)",
-    borderRadius: 10,
+    backgroundColor: "rgba(0, 0, 0, 0.25)",
+    borderRadius: 20,
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 10,
+    elevation: 8,
   },
   title: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: "bold",
     marginBottom: 15,
-    color: "#6a0dad",
+    color: "white",
+    textAlign: "center",
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 1, height: 2 },
+    textShadowRadius: 3,
   },
   input: {
     width: "100%",
     padding: 15,
     marginVertical: 10,
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
+    borderColor: "rgba(255,255,255,0.3)",
+    borderRadius: 10,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    color: "white",
   },
   imagePicker: {
-    backgroundColor: "#ddd",
-    padding: 10,
+    backgroundColor: "rgba(255,255,255,0.3)",
+    padding: 12,
     marginTop: 10,
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: "center",
     width: "100%",
   },
-  imagePickerText: { fontSize: 16, color: "#333" },
-  imagePreview: { width: 150, height: 150, borderRadius: 10, marginTop: 10 },
-  updateButton: {
-    backgroundColor: "#6a0dad",
-    padding: 15,
-    borderRadius: 8,
-    alignItems: "center",
+  imagePickerText: { fontSize: 16, color: "white" },
+  imagePreview: {
+    width: 150,
+    height: 150,
+    borderRadius: 10,
     marginTop: 10,
+  },
+  buttonContainer: {
     width: "100%",
+    marginTop: 15,
+  },
+  updateButton: {
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
   },
   buttonText: { color: "white", fontSize: 18, fontWeight: "bold" },
 });

@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     width: "90%",
     padding: 20,
     borderRadius: 15,
-    backgroundColor: "rgba(255, 255, 255, 0.6)", // Полупрозрачный эффект
+    backgroundColor: "rgba(255, 255, 255, 0.3)", // Полупрозрачный эффект
     alignItems: "center",
     shadowColor: "#000",
     shadowOpacity: 0.2,

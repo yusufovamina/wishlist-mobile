@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import Carousel from "react-native-reanimated-carousel";
 import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 
 const { width } = Dimensions.get("window");
 
@@ -40,13 +41,13 @@ export default function FeatureCarousel() {
     <View style={styles.carouselContainer}>
       <Carousel
         loop
-        width={width * 0.9} 
-        height={320}  
+        width={width * 0.9}
+        height={320}
         autoPlay
         autoPlayInterval={3000}
         data={features}
         scrollAnimationDuration={1200}
-        onSnapToItem={(index: React.SetStateAction<number>) => setActiveIndex(index)}
+        onSnapToItem={(index: number) => setActiveIndex(index)}
         renderItem={renderItem}
       />
 
@@ -59,8 +60,15 @@ export default function FeatureCarousel() {
         ))}
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={() => router.push("/login")}>
-        <Text style={styles.buttonText}>Create Your Wishlist</Text>
+      <TouchableOpacity onPress={() => router.push("/login")}>
+        <LinearGradient
+          colors={["#d32ff7", "#aa21cc"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={styles.button}
+        >
+          <Text style={styles.buttonText}>Create Your Wishlist</Text>
+        </LinearGradient>
       </TouchableOpacity>
     </View>
   );
@@ -72,54 +80,50 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   slide: {
-    backgroundColor: "rgba(255, 255, 255, 0.15)", // Frosted glass effect
-    borderRadius: 20, // Increased radius for more modern look
+ 
     padding: 20,
     alignItems: "center",
     justifyContent: "center",
     width: width * 0.9,
-    height: 320, // Increased height for a larger card
-    elevation: 10, 
-    shadowColor: "#000", 
-    shadowOffset: { width: 0, height: 6 },
+    height: 320,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0,
-    shadowRadius: 0,
-    backdropFilter: "blur(15px)", 
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)", // Subtle border for glass effect
-    overflow: "hidden", // To ensure rounded corners work as expected
+    shadowRadius: 10,
+    overflow: "hidden",
   },
   image: {
-    width: 220,  // Fixed width for all images
-    height: 220,  // Fixed height for all images
-    resizeMode: "cover", // Ensures images cover the container while maintaining aspect ratio
+    width: 220,
+    height: 220,
+    resizeMode: "cover",
     marginBottom: 15,
-    borderRadius: 15, // Rounded corners for the image
+    borderRadius: 20,
   },
   text: {
     fontSize: 20,
-    fontWeight: "bold",
+    fontWeight: "600",
     textAlign: "center",
     color: "white",
-    textShadowColor: "rgba(0, 0, 0, 0.4)", // Subtle text shadow for readability
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
     textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 5,
+    textShadowRadius: 4,
   },
   pagination: {
     flexDirection: "row",
     marginTop: 20,
   },
   dot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
     backgroundColor: "rgba(255, 255, 255, 0.5)",
-    marginHorizontal: 5,
+    marginHorizontal: 4,
   },
   activeDot: {
     backgroundColor: "white",
     width: 12,
     height: 12,
+    borderRadius: 6,
   },
   button: {
     marginTop: 25,
@@ -138,8 +142,9 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "white",
     fontSize: 18,
-    fontWeight: "bold",
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    fontWeight: "600",
+    textAlign: "center",
+    textShadowColor: "rgba(0, 0, 0, 0.4)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 3,
   },
