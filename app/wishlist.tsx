@@ -83,7 +83,7 @@ export default function WishlistScreen() {
   const handleShareWishlist = async () => {
     if (!userId) return;
 
-    const deepLink = `yourwishlist://wishlist/${userId}`;
+    const deepLink = `yourwishlist://wishlist/shared/${userId}`;
     const webLink = `https://yourwishlist.vercel.app/wishlist/shared/${userId}`;
 
     try {
@@ -148,7 +148,7 @@ export default function WishlistScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.shareButton} onPress={handleShareWishlist}>
-            <Text style={styles.buttonText}>🔗 Share Wishlist</Text>
+            <Text style={styles.buttonText}>Share Wishlist</Text>
           </TouchableOpacity>
         
       </Animated.View>

@@ -1,33 +1,69 @@
-import { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
+  Animated,
+  Easing,
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   Alert,
   ActivityIndicator,
   StyleSheet,
   ImageBackground,
   Image,
+  TouchableOpacity,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../services/api";
 
-// 📌 Типизация пропсов
 interface GiftFormProps {
-  onGiftAdded: () => void; // Функция, которая вызывается после успешного добавления
+  onGiftAdded: () => void;
 }
 
-const GiftForm: React.FC<GiftFormProps> = ({ onGiftAdded = () => {} }) => {
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
+const GiftForm: React.FC<GiftFormProps> = ({ onGiftAdded = () => {} }) => {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // 📌 Запрос на разрешение доступа к галерее и выбор изображения
+  // Анимация появления контейнера
+  const containerAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(containerAnim, {
+      toValue: 1,
+      duration: 600,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: true,
+    }).start();
+  }, []);
+
+  // Анимация нажатия для кнопки
+  const buttonScale = useRef(new Animated.Value(1)).current;
+  const handlePressIn = () => {
+    Animated.spring(buttonScale, { toValue: 0.95, useNativeDriver: true }).start();
+  };
+  const handlePressOut = () => {
+    Animated.spring(buttonScale, { toValue: 1, friction: 3, useNativeDriver: true }).start();
+  };
+
+  // Анимация появления изображения
+  const imageAnim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (image) {
+      Animated.timing(imageAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      imageAnim.setValue(0);
+    }
+  }, [image]);
+
+  // Выбор изображения из галереи
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
@@ -43,11 +79,11 @@ const GiftForm: React.FC<GiftFormProps> = ({ onGiftAdded = () => {} }) => {
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri); // 🔥 Теперь `image` – строка (`uri`)
+      setImage(result.assets[0].uri);
     }
   };
 
-  // 📌 Функция для отправки формы
+  // Отправка формы
   const handleCreateGift = async () => {
     if (!name || !price || !category) {
       Alert.alert("Error", "Please fill all required fields.");
@@ -66,25 +102,24 @@ const GiftForm: React.FC<GiftFormProps> = ({ onGiftAdded = () => {} }) => {
 
       const formData = new FormData();
       formData.append("name", name.trim());
-      formData.append("price", price.toString()); // ✅ Преобразуем число в строку
+      formData.append("price", price.toString());
       formData.append("category", category);
 
       if (image) {
         const response = await fetch(image);
-        const blob = await response.blob(); // 🔥 Преобразуем `uri` в `Blob`
-        
+        const blob = await response.blob();
         formData.append("imageFile", blob, `photo_${Date.now()}.jpg`);
       }
 
-      console.log("📤 Sending FormData:", formData);
+      console.log("Sending FormData:", formData);
 
-      const giftResponse = await api.post("/Gift", formData, {
+      await api.post("/Gift", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
         transformRequest: (data, headers) => {
-          delete headers["Content-Type"]; // React Native сам добавит `boundary`
+          delete headers["Content-Type"];
           return data;
         },
       });
@@ -94,9 +129,9 @@ const GiftForm: React.FC<GiftFormProps> = ({ onGiftAdded = () => {} }) => {
       setPrice("");
       setCategory("");
       setImage(null);
-      onGiftAdded(); // 📌 Вызываем обновление списка подарков
+      onGiftAdded();
     } catch (error) {
-      console.error("❌ Error adding gift:", error);
+      console.error("Error adding gift:", error);
       Alert.alert("Error", "Failed to add gift.");
     } finally {
       setIsLoading(false);
@@ -105,15 +140,32 @@ const GiftForm: React.FC<GiftFormProps> = ({ onGiftAdded = () => {} }) => {
 
   return (
     <ImageBackground
-      source={require("./assets/background.jpg")} // Ваш фоновый изображение
+      source={require("./assets/background.jpg")}
       style={styles.background}
+      resizeMode="cover"
     >
-      <View style={styles.container}>
-        <Text style={styles.title}>🎁 Add a Gift</Text>
+      <Animated.View
+        style={[
+          styles.container,
+          {
+            opacity: containerAnim,
+            transform: [
+              {
+                scale: containerAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0.9, 1],
+                }),
+              },
+            ],
+          },
+        ]}
+      >
+        <Text style={styles.title}>Add a Gift</Text>
 
         <TextInput
           style={styles.input}
           placeholder="Gift Name"
+          placeholderTextColor="#999"
           value={name}
           onChangeText={setName}
         />
@@ -121,6 +173,7 @@ const GiftForm: React.FC<GiftFormProps> = ({ onGiftAdded = () => {} }) => {
         <TextInput
           style={styles.input}
           placeholder="Price ($)"
+          placeholderTextColor="#999"
           keyboardType="numeric"
           value={price}
           onChangeText={setPrice}
@@ -129,27 +182,40 @@ const GiftForm: React.FC<GiftFormProps> = ({ onGiftAdded = () => {} }) => {
         <TextInput
           style={styles.input}
           placeholder="Category"
+          placeholderTextColor="#999"
           value={category}
           onChangeText={setCategory}
         />
 
-        {/* Кнопка выбора изображения */}
         <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-          <Text style={styles.imagePickerText}>{image ? "Change Image" : "Pick an Image"}</Text>
+          <Text style={styles.imagePickerText}>
+            {image ? "Change Image" : "Pick an Image"}
+          </Text>
         </TouchableOpacity>
 
-        {/* Показываем выбранное изображение */}
-        {image && <Image source={{ uri: image }} style={styles.imagePreview} />}
+        {image && (
+          <Animated.Image
+            source={{ uri: image }}
+            style={[styles.imagePreview, { opacity: imageAnim }]}
+            resizeMode="cover"
+          />
+        )}
 
-        {/* Кнопка для создания подарка */}
-        <TouchableOpacity style={styles.createButton} onPress={handleCreateGift} disabled={isLoading}>
+        <AnimatedTouchableOpacity
+          style={[styles.createButton, { transform: [{ scale: buttonScale }] }]}
+          onPress={handleCreateGift}
+          activeOpacity={0.8}
+          onPressIn={handlePressIn}
+          onPressOut={handlePressOut}
+          disabled={isLoading}
+        >
           {isLoading ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
             <Text style={styles.buttonText}>Add Gift</Text>
           )}
-        </TouchableOpacity>
-      </View>
+        </AnimatedTouchableOpacity>
+      </Animated.View>
     </ImageBackground>
   );
 };
@@ -159,59 +225,66 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
   },
   container: {
-    width: "100%", // Занимает всю ширину
-    maxWidth: 600, // Максимальная ширина (для удобства на больших экранах)
-    padding: 20,
+    width: "90%",
+    maxWidth: 400,
+    padding: 25,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.5)",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.6)", // Полупрозрачный фон для эффекта стеклянного морфизма
-    borderRadius: 15, // Скругленные углы
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#333",
     marginBottom: 20,
-    color: "#6a0dad",
   },
   input: {
     width: "100%",
     padding: 15,
-    marginVertical: 10,
+    marginVertical: 8,
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    backgroundColor: "rgba(255, 255, 255, 0.7)", // Полупрозрачный фон
-  },
-  imagePicker: {
-    backgroundColor: "#ddd",
-    padding: 10,
-    marginTop: 10,
-    borderRadius: 8,
-    alignItems: "center",
-    width: "100%",
-  },
-  imagePickerText: {
+    borderColor: "#ccc",
+    borderRadius: 10,
+    backgroundColor: "#fff",
     fontSize: 16,
     color: "#333",
   },
-  imagePreview: {
-    width: 150,
-    height: 150,
-    borderRadius: 10,
+  imagePicker: {
+    backgroundColor: "#f0f0f0",
+    padding: 12,
     marginTop: 10,
+    borderRadius: 10,
+    width: "100%",
+    alignItems: "center",
+  },
+  imagePickerText: {
+    fontSize: 16,
+    color: "#555",
+  },
+  imagePreview: {
+    width: 180,
+    height: 180,
+    borderRadius: 15,
+    marginTop: 15,
   },
   createButton: {
     backgroundColor: "#6a0dad",
-    padding: 15,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 10,
+    paddingVertical: 15,
+    paddingHorizontal: 25,
+    borderRadius: 15,
+    marginTop: 20,
     width: "100%",
+    alignItems: "center",
   },
   buttonText: {
-    color: "white",
+    color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
   },
