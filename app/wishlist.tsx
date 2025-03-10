@@ -16,6 +16,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../services/api";
 import { BlurView } from "expo-blur";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import ReservedGiftsPage from "./ReservedGiftsPage";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -147,11 +148,15 @@ export default function WishlistScreen() {
             <Text style={styles.buttonText}>+ Create Gift</Text>
           </TouchableOpacity>
 
+          <TouchableOpacity style={styles.createButton} onPress={() => router.push("/ReservedGiftsPage")}>
+            <Text style={styles.buttonText}>gifts</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.shareButton} onPress={handleShareWishlist}>
             <Text style={styles.buttonText}>Share Wishlist</Text>
           </TouchableOpacity>
-        
+   
       </Animated.View>
+    
     </ImageBackground>
   );
 }
@@ -189,6 +194,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginTop: 15,
+    marginBottom:15,
     width: "90%",
     alignSelf:"center",
     alignItems: "center",
