@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import api from "../services/api";
+import api from "../../services/api";
 import { BlurView } from "expo-blur";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import ReservedGiftsPage from "./ReservedGiftsPage";
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
   
   emptyText: {
     fontSize: 18,
-    color: "#999",
+    color: "white",
     marginTop: 20,
   },
   shareButton: {

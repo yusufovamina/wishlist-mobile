@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet, Image, ImageBackground } from "react-native";
+import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, StyleSheet, Image, ImageBackground, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import api from "../../../services/api";
-import AsyncStorage from "@react-native-async-storage/async-storage"; 
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface Gift {
   id: string;
@@ -11,6 +11,7 @@ interface Gift {
   imageUrl: string;
   category: string;
   reserved: boolean;
+  reservedByUsername?: string; // Добавлено имя пользователя
 }
 
 export default function SharedWishlistScreen() {
@@ -21,29 +22,14 @@ export default function SharedWishlistScreen() {
   const router = useRouter();
 
   useEffect(() => {
-    checkIfOwner();
     fetchGifts();
   }, []);
 
-  const checkIfOwner = async () => {
-    try {
-      const userId = await AsyncStorage.getItem("userId"); // Получаем ID пользователя из локального хранилища
-      const response = await api.get(`/Wishlist/${wishlistId}/owner`); // Получаем владельца вишлиста
-      const ownerId = response.data.ownerId; 
-
-      if (userId === ownerId) {
-        setIsOwner(true);
-        router.replace("/wishlist"); // Если это его вишлист, отправляем его в обычный экран
-      }
-    } catch (error) {
-      console.error("Error checking wishlist owner:", error);
-    }
-  };
 
   const fetchGifts = async () => {
     setLoading(true);
     try {
-      const response = await api.get<Gift[]>(`/Gift/wishlist`);
+      const response = await api.get<Gift[]>(`/Gift/shared/${wishlistId}`);
       setGifts(response.data);
     } catch (error) {
       console.warn("Error fetching gifts:", error);
@@ -54,27 +40,43 @@ export default function SharedWishlistScreen() {
 
   const handleReserveGift = async (giftId: string) => {
     try {
-      await api.post(`/Gift/${giftId}/reserve`);
-      setGifts((prevGifts) =>
-        prevGifts.map((gift) =>
-          gift.id === giftId ? { ...gift, reserved: true } : gift
-        )
+      const response = await api.post(`/Gift/${giftId}/reserve`);
+      const updatedGifts = gifts.map((gift) =>
+        gift.id === giftId
+          ? { ...gift, reserved: true, reservedByUsername: response.data.reservedBy }
+          : gift
       );
-      alert("Gift reserved!");
+      setGifts(updatedGifts);
+      Alert.alert("Success", "Gift reserved!");
     } catch (error) {
       console.error("Error reserving gift:", error);
-      alert("Failed to reserve gift.");
+      Alert.alert("Error", "Failed to reserve gift.");
+    }
+  };
+
+  const handleCancelReservation = async (giftId: string) => {
+    try {
+      // ✅ Исправленный маршрут для отмены резерва
+      await api.post(`/Gift/${giftId}/cancel-reserve`);
+      const updatedGifts = gifts.map((gift) =>
+        gift.id === giftId
+          ? { ...gift, reserved: false, reservedByUsername: undefined }
+          : gift
+      );
+      setGifts(updatedGifts);
+      Alert.alert("Success", "Reservation cancelled!");
+    } catch (error) {
+      console.error("Error cancelling reservation:", error);
+      Alert.alert("Error", "Failed to cancel reservation.");
     }
   };
 
   if (isOwner) {
-    return null; // Экран Shared Wishlist не загружается, если это владелец
+    return null;
   }
 
   return (
-      
-          <ImageBackground source={require("../../assets/background.jpg")} style={styles.background}>
-          
+    <ImageBackground source={require("../../assets/background.jpg")} style={styles.background}>
       <Text style={styles.title}>Friend's Wishlist</Text>
 
       {loading ? (
@@ -85,7 +87,6 @@ export default function SharedWishlistScreen() {
         <FlatList
           data={gifts}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
           renderItem={({ item }) => (
             <View style={styles.giftItem}>
               {item.imageUrl ? (
@@ -99,33 +100,37 @@ export default function SharedWishlistScreen() {
                 <Text style={styles.giftText}>{item.name}</Text>
                 <Text style={styles.priceText}>${item.price}</Text>
                 <Text style={styles.categoryText}>{item.category}</Text>
-              </View>
 
-              {!item.reserved ? (
-                <TouchableOpacity style={styles.reserveButton} onPress={() => handleReserveGift(item.id)}>
-                  <Text style={styles.buttonText}>Reserve</Text>
-                </TouchableOpacity>
-              ) : (
-                <Text style={styles.reservedText}>Reserved</Text>
-              )}
+                {/* Если подарок зарезервирован — показываем имя и блокируем кнопку */}
+                {item.reserved ? (
+                  <Text style={styles.reservedText}>
+                    Reserved by {item.reservedByUsername}
+                  </Text>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.reserveButton}
+                    onPress={() => handleReserveGift(item.id)}
+                    disabled={item.reserved} // Блокируем кнопку при резерве
+                  >
+                    <Text style={styles.buttonText}>Reserve</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           )}
         />
       )}
-      </ImageBackground>
-    
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    resizeMode: "cover",
     paddingHorizontal: 20,
     paddingVertical: 30,
     alignItems: "center",
   },
- 
   title: {
     fontSize: 28,
     fontWeight: "700",
@@ -136,9 +141,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "white",
     marginTop: 20,
-  },
-  listContent: {
-    paddingBottom: 20,
   },
   giftItem: {
     flexDirection: "row",
@@ -158,18 +160,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 10,
-  },
-  imagePlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: 10,
-    backgroundColor: "#ecf0f1",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  placeholderText: {
-    color: "#7f8c8d",
-    fontSize: 12,
   },
   giftTextContainer: {
     flex: 1,
@@ -196,6 +186,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderRadius: 10,
+    opacity: 1,
   },
   buttonText: {
     color: "#fff",
@@ -206,6 +197,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#D35400",
+    marginTop: 5,
+  },
+  imagePlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 10,
+    backgroundColor: "#ecf0f1",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  placeholderText: {
+    color: "#7f8c8d",
+    fontSize: 12,
   },
 });
-

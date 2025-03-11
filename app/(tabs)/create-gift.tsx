@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import api from "../services/api";
+import api from "../../services/api";
 
 interface GiftFormProps {
   onGiftAdded: () => void;
@@ -140,7 +140,7 @@ const GiftForm: React.FC<GiftFormProps> = ({ onGiftAdded = () => {} }) => {
 
   return (
     <ImageBackground
-      source={require("./assets/background.jpg")}
+      source={require("../assets/background.jpg")}
       style={styles.background}
       resizeMode="cover"
     >

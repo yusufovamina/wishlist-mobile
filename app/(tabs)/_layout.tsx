@@ -1,17 +1,17 @@
-import { Tabs } from 'expo-router/tabs';
-import { Ionicons } from '@expo/vector-icons';
+import { Tabs } from "expo-router";
+import CustomTabBar from "./TabBar";
 
-export default function TabsLayout() {
+export default function TabLayout() {
   return (
-    <Tabs>
-      <Tabs.Screen 
-        name="index" 
-        options={{ title: 'Home', tabBarIcon: ({ color }) => <Ionicons name="home" size={24} color={color} /> }} 
-      />
-      <Tabs.Screen 
-        name="wishlist" 
-        options={{ title: 'Wishlist', tabBarIcon: ({ color }) => <Ionicons name="gift" size={24} color={color} /> }} 
-      />
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+      }}
+      // Передаем наш кастомный таб-бар
+      tabBar={(props) => <CustomTabBar {...props} />}
+    >
+      <Tabs.Screen name="ReservedGifts" options={{ tabBarLabel: 'Reserved Gifts' }} />
+      <Tabs.Screen name="wishlist" options={{ tabBarLabel: 'Your Wishlist' }} />
     </Tabs>
   );
 }

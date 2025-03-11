@@ -41,7 +41,7 @@ export default function LoginScreen() {
       console.log("✅ User ID stored:", response.data.userId);
 
       Alert.alert("Success", "Logged in successfully!");
-      router.push("/wishlist");
+      router.push("/(tabs)/wishlist");
     } catch (err) {
       let errorMessage = "An unexpected error occurred.";
 
