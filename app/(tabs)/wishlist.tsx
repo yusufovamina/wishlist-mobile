@@ -148,9 +148,7 @@ export default function WishlistScreen() {
             <Text style={styles.buttonText}>+ Create Gift</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.createButton} onPress={() => router.push("/ReservedGiftsPage")}>
-            <Text style={styles.buttonText}>gifts</Text>
-          </TouchableOpacity>
+      
           <TouchableOpacity style={styles.shareButton} onPress={handleShareWishlist}>
             <Text style={styles.buttonText}>Share Wishlist</Text>
           </TouchableOpacity>
@@ -176,10 +174,10 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   title: {
-    fontSize: 26,
+    fontSize: 30,
     fontWeight: "bold",
-    marginBottom: 15,
-    marginTop: 15,
+    marginBottom: 20,
+    marginTop: 25,
     color: "white",         // Заголовок белого цвета
     textAlign: "center",    // Выравнивание по центру
   },
@@ -188,6 +186,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "white",
     marginTop: 20,
+    textAlign: "center",   
+
   },
   shareButton: {
     backgroundColor: "#4a228a",
@@ -195,9 +195,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginTop: 15,
     marginBottom:15,
-    width: "90%",
-    alignSelf:"center",
-    alignItems: "center",
+    width: 270,
+    alignSelf:"center",    alignItems: "center",
   },
   giftItem: {
     flexDirection: "row",

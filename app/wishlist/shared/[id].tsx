@@ -11,13 +11,14 @@ interface Gift {
   imageUrl: string;
   category: string;
   reserved: boolean;
-  reservedByUsername?: string; // Добавлено имя пользователя
+  reservedByUsername?: string; // Имя пользователя, который забронировал подарок
 }
 
 export default function SharedWishlistScreen() {
   const { id: wishlistId } = useLocalSearchParams();
   const [gifts, setGifts] = useState<Gift[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [wishlistOwner, setWishlistOwner] = useState<string>(''); // Храним имя владельца вишлиста
   const [isOwner, setIsOwner] = useState<boolean>(false);
   const router = useRouter();
 
@@ -25,12 +26,15 @@ export default function SharedWishlistScreen() {
     fetchGifts();
   }, []);
 
-
   const fetchGifts = async () => {
     setLoading(true);
     try {
       const response = await api.get<Gift[]>(`/Gift/shared/${wishlistId}`);
       setGifts(response.data);
+
+      // Запрос для получения имени пользователя по его ID (т.е. ID вишлиста)
+      const ownerResponse = await api.get(`/User/${wishlistId}`); // Предположим, что API по этому пути возвращает данные о пользователе
+      setWishlistOwner(ownerResponse.data.username); // Устанавливаем имя владельца вишлиста
     } catch (error) {
       console.warn("Error fetching gifts:", error);
     } finally {
@@ -56,7 +60,6 @@ export default function SharedWishlistScreen() {
 
   const handleCancelReservation = async (giftId: string) => {
     try {
-      // ✅ Исправленный маршрут для отмены резерва
       await api.post(`/Gift/${giftId}/cancel-reserve`);
       const updatedGifts = gifts.map((gift) =>
         gift.id === giftId
@@ -77,7 +80,7 @@ export default function SharedWishlistScreen() {
 
   return (
     <ImageBackground source={require("../../assets/background.jpg")} style={styles.background}>
-      <Text style={styles.title}>Friend's Wishlist</Text>
+      <Text style={styles.title}>{wishlistOwner}'s Wishlist</Text> {/* Имя владельца вишлиста */}
 
       {loading ? (
         <ActivityIndicator size="large" color="#1E90FF" />
@@ -101,20 +104,22 @@ export default function SharedWishlistScreen() {
                 <Text style={styles.priceText}>${item.price}</Text>
                 <Text style={styles.categoryText}>{item.category}</Text>
 
-                {/* Если подарок зарезервирован — показываем имя и блокируем кнопку */}
-                {item.reserved ? (
-                  <Text style={styles.reservedText}>
-                    Reserved by {item.reservedByUsername}
-                  </Text>
-                ) : (
-                  <TouchableOpacity
-                    style={styles.reserveButton}
-                    onPress={() => handleReserveGift(item.id)}
-                    disabled={item.reserved} // Блокируем кнопку при резерве
-                  >
-                    <Text style={styles.buttonText}>Reserve</Text>
-                  </TouchableOpacity>
-                )}
+                {item.reservedByUsername && (
+          <Text style={styles.reservedText}>
+            Reserved by {item.reservedByUsername}
+          </Text>
+        )}
+
+        {/* Если подарок не зарезервирован, отображаем кнопку */}
+        {!item.reservedByUsername && (
+          <TouchableOpacity
+            style={styles.reserveButton}
+            onPress={() => handleReserveGift(item.id)}
+            disabled={item.reserved} // Блокируем кнопку при резерве
+          >
+            <Text style={styles.buttonText}>Reserve</Text>
+          </TouchableOpacity>)
+          }
               </View>
             </View>
           )}
@@ -124,18 +129,21 @@ export default function SharedWishlistScreen() {
   );
 }
 
+
 const styles = StyleSheet.create({
   background: {
     flex: 1,
     paddingHorizontal: 20,
     paddingVertical: 30,
     alignItems: "center",
+    overlayColor: 'rgba(0, 0, 0, 0.5)'
   },
   title: {
     fontSize: 28,
     fontWeight: "700",
     color: "#333",
     marginBottom: 20,
+    textAlign: "center",
   },
   emptyText: {
     fontSize: 18,
@@ -145,11 +153,11 @@ const styles = StyleSheet.create({
   giftItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
     borderRadius: 15,
     padding: 15,
     marginVertical: 8,
-    width: "100%",
+    width: 280, // Карточки занимают полную ширину экрана
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.1,
@@ -157,8 +165,8 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   giftImage: {
-    width: 80,
-    height: 80,
+    width: 90,
+    height: 90,
     borderRadius: 10,
   },
   giftTextContainer: {
@@ -200,8 +208,8 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   imagePlaceholder: {
-    width: 80,
-    height: 80,
+    width: 90,
+    height: 90,
     borderRadius: 10,
     backgroundColor: "#ecf0f1",
     justifyContent: "center",
