@@ -113,6 +113,14 @@ export default function GiftDetailsScreen() {
           >
             <Text style={styles.buttonText}>Delete Gift</Text>
           </TouchableOpacity>
+
+          {/* Кнопка "Back to Wishlist" */}
+          <TouchableOpacity
+            style={ styles.backButton}
+            onPress={() => router.replace("/wishlist")}
+          >
+            <Text style={styles.backButtonText}>Back to Wishlist</Text>
+          </TouchableOpacity>
         </Animated.View>
       ) : (
         <Text style={styles.errorText}>Gift not found.</Text>
@@ -149,8 +157,8 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "white",       // Белый цвет заголовка
-    textAlign: "center",  // Центрирование текста
+    color: "white",
+    textAlign: "center",
     marginBottom: 10,
     textShadowColor: "rgba(0, 0, 0, 0.5)",
     textShadowOffset: { width: 1, height: 2 },
@@ -179,6 +187,18 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     backgroundColor: "#E63946",
+  },
+  backButton: {
+    padding: 10,
+    marginTop: 10,
+    width: "85%",
+    alignItems: "center",
+    backgroundColor: `rgba(0,0,0,0)`,
+  },
+  backButtonText: {
+    color: "white",
+    fontSize: 18,
+    
   },
   buttonText: {
     color: "white",

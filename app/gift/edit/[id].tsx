@@ -143,12 +143,7 @@ export default function EditGiftScreen() {
             onChangeText={setCategory}
           />
 
-          <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-            <Text style={styles.imagePickerText}>
-              {image ? "Change Image" : "Pick an Image"}
-            </Text>
-          </TouchableOpacity>
-
+       
           {image && <Image source={{ uri: image }} style={styles.imagePreview} />}
 
           <TouchableOpacity onPress={handleUpdateGift} disabled={loading} style={styles.buttonContainer}>

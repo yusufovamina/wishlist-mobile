@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontWeight: "bold",
     marginBottom: 20,
-    marginTop: 25,
+    marginTop: 40,
     color: "white",         // Заголовок белого цвета
     textAlign: "center",    // Выравнивание по центру
   },

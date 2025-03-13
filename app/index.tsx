@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { View, StyleSheet, SafeAreaView, ImageBackground } from "react-native";
+import { View, StyleSheet, SafeAreaView } from "react-native";
 import { useRouter } from "expo-router";
 import FeatureCarousel from "./FeatureCarousel";
 import Animated, {
@@ -9,6 +9,8 @@ import Animated, {
   withDelay,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
+import { Video } from "expo-av";
+import { BlurView } from "expo-blur";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -41,9 +43,19 @@ export default function HomeScreen() {
   }));
 
   return (
+    <View style={styles.backgroundContainer}>
+      {/* Видеофон с bg.mp4 */}
+      <Video
+        source={require("./assets/bg.mp4")}
+        style={StyleSheet.absoluteFill}
    
-       <ImageBackground source={require("../assets/background.jpg")} style={styles.background}>
-      {/* Градиентный оверлей для затемнения фона */}
+        shouldPlay
+        isLooping
+        isMuted
+      />
+      {/* Блюр-слой поверх видео */}
+      <BlurView intensity={50} style={StyleSheet.absoluteFill} />
+      {/* Градиентный оверлей */}
       <LinearGradient
         colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.4)"]}
         style={StyleSheet.absoluteFill}
@@ -58,15 +70,13 @@ export default function HomeScreen() {
           <FeatureCarousel />
         </Animated.View>
       </SafeAreaView>
-    </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  background: {
+  backgroundContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
   },
   container: {
     flex: 1,

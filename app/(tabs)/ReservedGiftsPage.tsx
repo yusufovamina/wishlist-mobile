@@ -7,13 +7,14 @@ import {
   TouchableOpacity, 
   StyleSheet, 
   ToastAndroid, 
-  ImageBackground 
+  Alert 
 } from 'react-native';
-
+import { Video } from 'expo-av';
+import { BlurView } from 'expo-blur';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import api from '../../services/api';
-import { Alert } from 'react-native';
 import { router } from 'expo-router';
+
 type RootStackParamList = {
   wishlist: { wishlistId: string };
 };
@@ -49,33 +50,30 @@ const ReservedGiftsPage: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-
-
   const cancelReservation = async (giftId: string) => {
     try {
       await api.post(`/Gift/${giftId}/cancel-reserve`);
-      Alert.alert(
-        'Success',
-        'Reservation cancelled!',
-        [{ text: 'OK' }]
-      );
-      fetchReservedGifts(); // Обновляем список после отмены резерва
+      Alert.alert('Success', 'Reservation cancelled!', [{ text: 'OK' }]);
+      fetchReservedGifts();
     } catch (error) {
-      Alert.alert(
-        'Error',
-        'Failed to cancel reservation.',
-        [{ text: 'OK' }]
-      );
+      Alert.alert('Error', 'Failed to cancel reservation.', [{ text: 'OK' }]);
     }
   };
-  
 
   return (
-    <ImageBackground 
-      source={require('../assets/background.jpg')} 
-      style={styles.background}
-      resizeMode="cover"
-    >
+    <View style={styles.backgroundContainer}>
+      {/* Видеофон */}
+      <Video
+        source={require('../assets/bg.mp4')}
+        style={StyleSheet.absoluteFill}
+       
+        shouldPlay
+        isLooping
+        isMuted
+      />
+      {/* Блюр-слой поверх видео */}
+      <BlurView intensity={50} tint="default" style={StyleSheet.absoluteFill} />
+      
       <View style={styles.overlay}>
         <Text style={styles.heading}>Gifts I Will Give </Text>
         
@@ -96,13 +94,12 @@ const ReservedGiftsPage: React.FC<Props> = ({ navigation }) => {
                   <Text style={styles.category}>{item.category}</Text>
                   <Text style={styles.price}>${item.price}</Text>
                   <View style={styles.buttonContainer}>
-                  <TouchableOpacity 
-      style={styles.viewButton}
-      onPress={() => router.push(`/wishlist/shared/${item.wishlistId}`)}
-    >
-      <Text style={styles.buttonText}>View Wishlist</Text>
-    </TouchableOpacity>
-  
+                    <TouchableOpacity 
+                      style={styles.viewButton}
+                      onPress={() => router.push(`/wishlist/shared/${item.wishlistId}`)}
+                    >
+                      <Text style={styles.buttonText}>View Wishlist</Text>
+                    </TouchableOpacity>
                     <TouchableOpacity 
                       style={styles.cancelButton} 
                       onPress={() => cancelReservation(item.id)}
@@ -116,15 +113,13 @@ const ReservedGiftsPage: React.FC<Props> = ({ navigation }) => {
           />
         )}
       </View>
-    </ImageBackground>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  background: {
+  backgroundContainer: {
     flex: 1,
-    width: '100%',
-    height: '100%',
   },
   overlay: {
     flex: 1,
@@ -137,7 +132,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     textAlign: 'center',
     marginBottom: 20,
-    marginTop: 20
+    marginTop: 20,
   },
   emptyText: {
     fontSize: 18,
@@ -147,8 +142,7 @@ const styles = StyleSheet.create({
   },
   card: {
     flexDirection: 'row',
-
-    backgroundColor: 'rgba(255, 255, 255, 0.6)', // Убрали градиент — просто белый фон
+    backgroundColor: 'rgba(255, 255, 255, 0.6)',
     padding: 12,
     borderRadius: 15,
     marginBottom: 12,

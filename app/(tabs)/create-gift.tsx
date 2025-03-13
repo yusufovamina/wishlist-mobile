@@ -8,13 +8,13 @@ import {
   Alert,
   ActivityIndicator,
   StyleSheet,
-  ImageBackground,
-  Image,
   TouchableOpacity,
 } from "react-native";
+import { Video } from "expo-av";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import api from "../../services/api";
+import { BlurView } from "expo-blur";
 
 interface GiftFormProps {
   onGiftAdded: () => void;
@@ -23,13 +23,13 @@ interface GiftFormProps {
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 const GiftForm: React.FC<GiftFormProps> = ({ onGiftAdded = () => {} }) => {
+  // Ваши state и анимации остаются без изменений
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Анимация появления контейнера
   const containerAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.timing(containerAnim, {
@@ -40,7 +40,6 @@ const GiftForm: React.FC<GiftFormProps> = ({ onGiftAdded = () => {} }) => {
     }).start();
   }, []);
 
-  // Анимация нажатия для кнопки
   const buttonScale = useRef(new Animated.Value(1)).current;
   const handlePressIn = () => {
     Animated.spring(buttonScale, { toValue: 0.95, useNativeDriver: true }).start();
@@ -49,7 +48,6 @@ const GiftForm: React.FC<GiftFormProps> = ({ onGiftAdded = () => {} }) => {
     Animated.spring(buttonScale, { toValue: 1, friction: 3, useNativeDriver: true }).start();
   };
 
-  // Анимация появления изображения
   const imageAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     if (image) {
@@ -63,7 +61,6 @@ const GiftForm: React.FC<GiftFormProps> = ({ onGiftAdded = () => {} }) => {
     }
   }, [image]);
 
-  // Выбор изображения из галереи
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
@@ -83,7 +80,6 @@ const GiftForm: React.FC<GiftFormProps> = ({ onGiftAdded = () => {} }) => {
     }
   };
 
-  // Отправка формы
   const handleCreateGift = async () => {
     if (!name || !price || !category) {
       Alert.alert("Error", "Please fill all required fields.");
@@ -139,11 +135,17 @@ const GiftForm: React.FC<GiftFormProps> = ({ onGiftAdded = () => {} }) => {
   };
 
   return (
-    <ImageBackground
-      source={require("../assets/background.jpg")}
-      style={styles.background}
-      resizeMode="cover"
-    >
+    <View style={styles.backgroundContainer}>
+      <Video
+        source={require("../assets/bg.mp4")} // Укажите путь к вашему видео
+        style={StyleSheet.absoluteFill}
+      
+        shouldPlay
+        isLooping
+        isMuted
+      />
+ <BlurView intensity={50} tint="default" style={StyleSheet.absoluteFill} />
+
       <Animated.View
         style={[
           styles.container,
@@ -216,12 +218,12 @@ const GiftForm: React.FC<GiftFormProps> = ({ onGiftAdded = () => {} }) => {
           )}
         </AnimatedTouchableOpacity>
       </Animated.View>
-    </ImageBackground>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  background: {
+  backgroundContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
